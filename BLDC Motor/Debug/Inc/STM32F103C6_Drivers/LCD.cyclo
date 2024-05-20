@@ -1,0 +1,10 @@
+../Inc/STM32F103C6_Drivers/LCD.c:12:6:delay	3
+../Inc/STM32F103C6_Drivers/LCD.c:19:6:LCD_GPIO_init	1
+../Inc/STM32F103C6_Drivers/LCD.c:65:6:LCD_init	1
+../Inc/STM32F103C6_Drivers/LCD.c:97:6:LCD_Kick_Enable	1
+../Inc/STM32F103C6_Drivers/LCD.c:104:6:LCD_send_command	1
+../Inc/STM32F103C6_Drivers/LCD.c:141:6:LCD_send_character	1
+../Inc/STM32F103C6_Drivers/LCD.c:180:6:LCD_send_string	4
+../Inc/STM32F103C6_Drivers/LCD.c:196:6:LCD_Clear_Screen	1
+../Inc/STM32F103C6_Drivers/LCD.c:208:6:LCD_set_cursor	5
+../Inc/STM32F103C6_Drivers/LCD.c:222:6:LCD_send_Num	1

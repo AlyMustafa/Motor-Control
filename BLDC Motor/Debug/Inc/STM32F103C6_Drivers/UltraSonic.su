@@ -1,0 +1,2 @@
+../Inc/STM32F103C6_Drivers/UltraSonic.c:23:6:UltraSonic_init	16	static
+../Inc/STM32F103C6_Drivers/UltraSonic.c:43:10:Ultra_get_distance	16	static

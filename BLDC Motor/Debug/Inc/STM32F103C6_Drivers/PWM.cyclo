@@ -1,0 +1,7 @@
+../Inc/STM32F103C6_Drivers/PWM.c:8:8:get_timer_mapping	10
+../Inc/STM32F103C6_Drivers/PWM.c:40:9:get_timer_channel	17
+../Inc/STM32F103C6_Drivers/PWM.c:95:6:Timer_compare_micro	5
+../Inc/STM32F103C6_Drivers/PWM.c:150:6:Timer_compare_milli	5
+../Inc/STM32F103C6_Drivers/PWM.c:207:6:Timer_PWM_micro	5
+../Inc/STM32F103C6_Drivers/PWM.c:262:6:Timer_PWM_milli	5
+../Inc/STM32F103C6_Drivers/PWM.c:310:6:SPWM	5
