@@ -23,13 +23,17 @@
 #include "PWM.h"
 #include "Servo.h"
 #include "UltraSonic.h"
+#include "UART.h"
+
 
 #define STM32cube
 
 
 //#define MAX_SPEED 1000
 //#define Target_Val 200
-#define MOTOR_PWM 800
+int MOTOR_PWM =400;
+uint8_t ch;
+
 #define ARR_Val  1000
 
 uint8_t Motor_Direction = 0;
@@ -75,7 +79,8 @@ uint8_t Hall3_state =0;     //motor state
 void S1(){
 	Hall1_state = MCAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6);
 	//red
-	MCAL_GPIO_WritePin(GPIOB, red, Hall1_state);
+	//MCAL_GPIO_WritePin(GPIOB, red, Hall1_state);
+	USART3_IRQHandler();
 	//motor direction
 	if(Motor_Direction == 0){
 		NextStep_FORWARD();
@@ -83,12 +88,16 @@ void S1(){
 	else {
 		NextStep_REVERSE();
 	}
+
+
 }
 //S2
 void S2(){
 	Hall2_state = MCAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7);
 	//blue
-		MCAL_GPIO_WritePin(GPIOB, blue, Hall2_state);
+	//MCAL_GPIO_WritePin(GPIOB, blue, Hall2_state);
+	USART3_IRQHandler();
+
 	//motor direction
 	if(Motor_Direction==0){
 		NextStep_FORWARD();
@@ -101,7 +110,9 @@ void S2(){
 void S3(){
 	Hall3_state = MCAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
 	//green
-	MCAL_GPIO_WritePin(GPIOB, green, Hall3_state);
+	//MCAL_GPIO_WritePin(GPIOB, green, Hall3_state);
+	USART3_IRQHandler();
+
 	//motor direction
 	if(Motor_Direction==0){
 		NextStep_FORWARD();
@@ -215,7 +226,7 @@ void NextStep_FORWARD() {
 	SPWM( GPIOA , CL, ARR_Val , Prescaler_Val , 0 , CLK);
 	//for Dead Band
 	TDelay_Micro(T4, 2, Prescaler_delay );
-	
+
 	state();
 
 }
@@ -262,6 +273,60 @@ void S1();
 void S2();
 void S3();
 
+void USART3_IRQHandler(void){
+	MCAL_UART_ReceiveData(USART3, &ch, Disable);
+	if(ch=='1'){
+		//MCAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+		MOTOR_PWM += 50;
+		if(MOTOR_PWM >= 600)
+			MOTOR_PWM = 600;
+		ch='0';
+	}
+	if(ch=='2'){
+		//MCAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+		MOTOR_PWM = MOTOR_PWM - 50;
+		if(MOTOR_PWM < 100)
+			MOTOR_PWM= 100;
+		ch='0';
+	}
+
+	if(ch=='3'){
+		//MCAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+		MOTOR_PWM = 600;
+		ch='0';
+	}
+
+	if(ch=='4'){
+		//MCAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+		MCAL_GPIO_WritePin(GPIOA, AH, 0);
+		MCAL_GPIO_WritePin(GPIOA, BH, 0);
+		MCAL_GPIO_WritePin(GPIOA, CH, 0);
+		TDelay_Micro(T4, 2, Prescaler_delay );
+		MOTOR_PWM = 0;
+		SPWM( GPIOA , AL, ARR_Val , Prescaler_Val , 800 , CLK);
+		SPWM( GPIOA , BL, ARR_Val , Prescaler_Val , 800 , CLK);
+		SPWM( GPIOA , CL, ARR_Val , Prescaler_Val , 800 , CLK);
+		TDelay_Milli(T4, 1000, Prescaler_delay );
+		MOTOR_PWM = 0;
+		USART3_IRQHandler();
+
+		//MCAL_GPIO_WritePin(GPIOA, AL, 0);
+		//MCAL_GPIO_WritePin(GPIOA, BL, 0);
+	    //MCAL_GPIO_WritePin(GPIOA, CL, 0);
+		//TDelay_Micro(T4, 20, Prescaler_delay );
+
+
+//
+		//
+
+		ch='1';
+
+	}
+
+
+}
+
+
 //==============================================================================
 
 int main(){
@@ -274,15 +339,36 @@ int main(){
 	//*****************************************************
 	BLCD_Init();
 	//==========================================================================
+	//*****************************************************
+	//===================== UART INIT ===================
+	//*****************************************************
+	GPIO_config_t PB2 =  {GPIO_PIN_1 , GPIO_MODE_OUTPUT_PP ,GPIO_SPEED_10M };
+	MCAL_GPIO_Init(GPIOB, &PB2 );
+
+	UART_Config_t UARTCFG;
+	UARTCFG.USART_Mode = USART_Mode_RX_TX;
+	UARTCFG.BaudeRate = UART_BaudRate_9600;
+	UARTCFG.HWFlowCtl = USART_HWFlowCtl_NONE;
+	UARTCFG.IRQ_Enable = USART_irq_Enable_RXNE;
+	//UARTCFG.P_IRQ_CallBack = UART_CallBack_fn;
+	UARTCFG.Parity = USART_Parity_NONE;
+	UARTCFG.PayloadLength = USART_Payload_Length_8D;
+	UARTCFG.StopBits = USART_StopBits_1;
+
+	MCAL_UART_Init(USART3, &UARTCFG);
+	MCAL_UART_GPIO_SetPins(USART3);
+
 
 	while(1)
 	{
 
+		USART3_IRQHandler();
+
 	}
 }
-	//******************************************************
-	//===================== BLDC INIT ======================
-	//******************************************************
+//******************************************************
+//===================== BLDC INIT ======================
+//******************************************************
 void BLCD_Init(){
 	//*******************************************************
 	//================== Control switches  ==================
@@ -308,6 +394,7 @@ void BLCD_Init(){
 	S1();
 	S2();
 	S3();
+	USART3_IRQHandler();
 }
 void Clk_init(){
 	RCC_GPIOB_CLK_EN();
